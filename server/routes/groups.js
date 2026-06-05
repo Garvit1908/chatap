@@ -1,0 +1,125 @@
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const Group = require("../models/Group");
+const User = require("../models/User");
+
+const router = express.Router();
+
+// Middleware: verify JWT token
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "No token, authorization denied" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.id;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token" });
+  }
+};
+
+// POST /api/groups — create a new group
+router.post("/", authMiddleware, async (req, res) => {
+  try {
+    const { name, members } = req.body;
+
+    if (!name || !members || members.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Group name and members are required" });
+    }
+
+    // Ensure the creator is included in members
+    const allMembers = [...new Set([req.userId, ...members])];
+
+    const group = new Group({
+      name,
+      admin: req.userId,
+      members: allMembers,
+    });
+
+    await group.save();
+
+    const populatedGroup = await Group.findById(group._id)
+      .populate("admin", "-password")
+      .populate("members", "-password");
+
+    res.status(201).json(populatedGroup);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// GET /api/groups — get all groups the user belongs to
+router.get("/", authMiddleware, async (req, res) => {
+  try {
+    const groups = await Group.find({ members: req.userId })
+      .populate("admin", "-password")
+      .populate("members", "-password")
+      .sort({ updatedAt: -1 });
+
+    res.json(groups);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// PUT /api/groups/:id/add-members — add members to a group
+router.put("/:id/add-members", authMiddleware, async (req, res) => {
+  try {
+    const { members } = req.body;
+    const group = await Group.findById(req.params.id);
+
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    // Only admin can add members
+    if (group.admin.toString() !== req.userId) {
+      return res.status(403).json({ message: "Only admin can add members" });
+    }
+
+    // Add new members (avoid duplicates)
+    const existingIds = group.members.map((m) => m.toString());
+    const newMembers = members.filter((m) => !existingIds.includes(m));
+    group.members.push(...newMembers);
+
+    await group.save();
+
+    const populatedGroup = await Group.findById(group._id)
+      .populate("admin", "-password")
+      .populate("members", "-password");
+
+    res.json(populatedGroup);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// DELETE /api/groups/:id — delete a group (admin only)
+router.delete("/:id", authMiddleware, async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id);
+
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    if (group.admin.toString() !== req.userId) {
+      return res.status(403).json({ message: "Only admin can delete group" });
+    }
+
+    await Group.findByIdAndDelete(req.params.id);
+    res.json({ message: "Group deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+module.exports = router;
