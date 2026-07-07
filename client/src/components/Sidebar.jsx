@@ -70,17 +70,17 @@ export default function Sidebar({
   };
 
   return (
-    <div className="w-80 bg-[#13102e] border-r border-white/5 flex flex-col h-full">
+    <div className="w-80 bg-gradient-to-b from-[#13102e] to-[#0f0c29] border-r border-white/10 flex flex-col h-full shadow-2xl relative z-20">
       {/* Header */}
-      <div className="p-5 border-b border-white/5">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
+      <div className="p-6 border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-md">
             TalkFlow
           </h1>
           <button
             id="logout-btn"
             onClick={onLogout}
-            className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
+            className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-full transition-all duration-300 hover:rotate-12 cursor-pointer shadow-sm"
             title="Logout"
           >
             <svg
@@ -100,27 +100,30 @@ export default function Sidebar({
         </div>
 
         {/* Current user */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-4 mb-6 bg-white/5 p-3 rounded-2xl border border-white/10 shadow-inner">
           <div
-            className={`w-9 h-9 rounded-full bg-gradient-to-br ${getColor(currentUser?.id)} flex items-center justify-center text-white text-sm font-semibold`}
+            className={`w-10 h-10 rounded-full bg-gradient-to-br ${getColor(currentUser?.id)} flex items-center justify-center text-white text-sm font-semibold shadow-lg ring-2 ring-white/20`}
           >
             {getInitial(currentUser?.name)}
           </div>
           <div>
-            <p className="text-white text-sm font-medium">
+            <p className="text-white text-sm font-semibold tracking-wide">
               {currentUser?.name}
             </p>
-            <p className="text-green-400 text-xs flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
+            <p className="text-emerald-400 text-xs flex items-center gap-1.5 font-medium mt-0.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
               Online
             </p>
           </div>
         </div>
 
         {/* Search */}
-        <div className="relative">
+        <div className="relative group">
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-cyan-400 transition-colors duration-300"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -137,30 +140,30 @@ export default function Sidebar({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-violet-500/50 transition-all"
+            placeholder="Search chats..."
+            className="w-full pl-11 pr-4 py-3 bg-black/20 border border-white/10 rounded-full text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-300 shadow-inner"
           />
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-white/5">
+      <div className="flex p-2 gap-1 bg-black/10">
         <button
           onClick={() => setTab("users")}
-          className={`flex-1 py-3 text-sm font-medium transition-all cursor-pointer ${
+          className={`flex-1 py-2.5 text-sm font-semibold transition-all duration-300 rounded-lg cursor-pointer ${
             tab === "users"
-              ? "text-violet-400 border-b-2 border-violet-400"
-              : "text-gray-500 hover:text-gray-300"
+              ? "bg-white/10 text-white shadow-md ring-1 ring-white/20"
+              : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
           }`}
         >
           Users
         </button>
         <button
           onClick={() => setTab("groups")}
-          className={`flex-1 py-3 text-sm font-medium transition-all cursor-pointer ${
+          className={`flex-1 py-2.5 text-sm font-semibold transition-all duration-300 rounded-lg cursor-pointer ${
             tab === "groups"
-              ? "text-violet-400 border-b-2 border-violet-400"
-              : "text-gray-500 hover:text-gray-300"
+              ? "bg-white/10 text-white shadow-md ring-1 ring-white/20"
+              : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
           }`}
         >
           Groups
@@ -168,108 +171,103 @@ export default function Sidebar({
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scrollbar-hide py-3 px-2 space-y-1">
         {tab === "users" ? (
-          <div className="p-2">
+          <>
             {filteredUsers.map((u) => (
               <button
                 key={u._id}
                 onClick={() => onSelectUser(u)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all cursor-pointer ${
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 hover:scale-[1.02] cursor-pointer group ${
                   selectedChat?._id === u._id && chatType === "user"
-                    ? "bg-violet-600/20 border border-violet-500/30"
+                    ? "bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 border border-violet-500/50 shadow-lg shadow-violet-500/10"
                     : "hover:bg-white/5 border border-transparent"
                 }`}
               >
                 <div className="relative">
                   <div
-                    className={`w-10 h-10 rounded-full bg-gradient-to-br ${getColor(u._id)} flex items-center justify-center text-white text-sm font-semibold`}
+                    className={`w-11 h-11 rounded-full bg-gradient-to-br ${getColor(u._id)} flex items-center justify-center text-white text-sm font-bold shadow-md group-hover:shadow-lg transition-all`}
                   >
                     {getInitial(u.name)}
                   </div>
                   <span
-                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#13102e] ${
+                    className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-[#13102e] ${
                       onlineUsers.includes(u._id)
-                        ? "bg-green-400"
+                        ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
                         : "bg-gray-500"
                     }`}
                   ></span>
                 </div>
-                <div className="text-left">
-                  <p className="text-white text-sm font-medium">{u.name}</p>
+                <div className="text-left flex-1">
+                  <p className="text-gray-100 text-sm font-semibold tracking-wide">{u.name}</p>
                   <p
-                    className={`text-xs ${onlineUsers.includes(u._id) ? "text-green-400" : "text-gray-500"}`}
+                    className={`text-xs font-medium mt-0.5 ${onlineUsers.includes(u._id) ? "text-emerald-400" : "text-gray-500"}`}
                   >
-                    {onlineUsers.includes(u._id) ? "Online" : "Offline"}
+                    {onlineUsers.includes(u._id) ? "Active now" : "Offline"}
                   </p>
                 </div>
               </button>
             ))}
             {filteredUsers.length === 0 && (
-              <p className="text-gray-500 text-sm text-center py-8">
-                No users found
-              </p>
+              <div className="flex flex-col items-center justify-center h-32 opacity-50">
+                <p className="text-gray-400 text-sm font-medium">No users found</p>
+              </div>
             )}
-          </div>
+          </>
         ) : (
-          <div className="p-2">
+          <>
             {/* Create group button */}
             <button
               onClick={() => setShowCreateGroup(!showCreateGroup)}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 transition-all mb-1 cursor-pointer"
+              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-gradient-to-r hover:from-violet-600/20 hover:to-cyan-600/20 border border-white/5 hover:border-violet-500/30 transition-all duration-300 hover:scale-[1.02] cursor-pointer mb-2 group"
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center text-white">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-600 to-cyan-500 flex items-center justify-center text-white shadow-md group-hover:rotate-90 transition-transform duration-500">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
-              <p className="text-violet-400 text-sm font-medium">
-                Create Group
+              <p className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400 text-sm font-bold tracking-wide">
+                New Group
               </p>
             </button>
 
             {/* Create group form */}
             {showCreateGroup && (
-              <div className="mx-2 mb-3 p-4 bg-white/5 rounded-xl border border-white/10">
+              <div className="mx-1 mb-4 p-5 bg-white/[0.03] rounded-2xl border border-white/10 backdrop-blur-md shadow-xl animate-in slide-in-from-top-2 duration-300">
                 <input
                   type="text"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
-                  placeholder="Group name"
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-violet-500/50 mb-3"
+                  placeholder="Group Name..."
+                  className="w-full px-4 py-2.5 bg-black/20 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 mb-4 transition-all"
                 />
-                <p className="text-gray-400 text-xs mb-2">Select members:</p>
-                <div className="max-h-32 overflow-y-auto space-y-1 mb-3">
+                <p className="text-gray-400 text-xs font-semibold mb-3 tracking-wider uppercase">Select Members</p>
+                <div className="max-h-40 overflow-y-auto space-y-1.5 mb-4 scrollbar-hide pr-1">
                   {users.map((u) => (
                     <label
                       key={u._id}
-                      className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer"
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/10 transition-colors cursor-pointer group"
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedMembers.includes(u._id)}
-                        onChange={() => toggleMember(u._id)}
-                        className="accent-violet-500"
-                      />
-                      <span className="text-white text-sm">{u.name}</span>
+                      <div className="relative flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedMembers.includes(u._id)}
+                          onChange={() => toggleMember(u._id)}
+                          className="peer appearance-none w-5 h-5 border-2 border-gray-500 rounded-md checked:bg-violet-500 checked:border-violet-500 transition-all cursor-pointer"
+                        />
+                        <svg className="absolute w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="text-gray-300 text-sm font-medium group-hover:text-white transition-colors">{u.name}</span>
                     </label>
                   ))}
                 </div>
                 <button
                   onClick={createGroup}
-                  className="w-full py-2 bg-gradient-to-r from-violet-600 to-cyan-600 text-white text-sm font-medium rounded-lg hover:from-violet-500 hover:to-cyan-500 transition-all cursor-pointer"
+                  className="w-full py-2.5 bg-gradient-to-r from-violet-600 to-cyan-600 text-white text-sm font-bold rounded-xl hover:from-violet-500 hover:to-cyan-500 transition-all duration-300 shadow-[0_0_15px_rgba(124,58,237,0.3)] hover:shadow-[0_0_25px_rgba(124,58,237,0.5)] cursor-pointer"
                 >
-                  Create
+                  Create Group
                 </button>
               </div>
             )}
@@ -279,31 +277,31 @@ export default function Sidebar({
               <button
                 key={g._id}
                 onClick={() => onSelectGroup(g)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all cursor-pointer ${
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 hover:scale-[1.02] cursor-pointer group ${
                   selectedChat?._id === g._id && chatType === "group"
-                    ? "bg-violet-600/20 border border-violet-500/30"
+                    ? "bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 border border-violet-500/50 shadow-lg shadow-violet-500/10"
                     : "hover:bg-white/5 border border-transparent"
                 }`}
               >
                 <div
-                  className={`w-10 h-10 rounded-full bg-gradient-to-br ${getColor(g._id)} flex items-center justify-center text-white text-sm font-semibold`}
+                  className={`w-11 h-11 rounded-xl bg-gradient-to-br ${getColor(g._id)} flex items-center justify-center text-white text-sm font-bold shadow-md transform group-hover:rotate-3 transition-transform`}
                 >
                   {getInitial(g.name)}
                 </div>
-                <div className="text-left">
-                  <p className="text-white text-sm font-medium">{g.name}</p>
-                  <p className="text-gray-500 text-xs">
-                    {g.members?.length || 0} members
+                <div className="text-left flex-1">
+                  <p className="text-gray-100 text-sm font-semibold tracking-wide">{g.name}</p>
+                  <p className="text-gray-500 text-xs font-medium mt-0.5">
+                    {g.members?.length || 0} participants
                   </p>
                 </div>
               </button>
             ))}
             {filteredGroups.length === 0 && !showCreateGroup && (
-              <p className="text-gray-500 text-sm text-center py-8">
-                No groups yet
-              </p>
+              <div className="flex flex-col items-center justify-center h-32 opacity-50">
+                <p className="text-gray-400 text-sm font-medium">No groups yet</p>
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>

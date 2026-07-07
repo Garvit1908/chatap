@@ -63,6 +63,14 @@ export default function Chat() {
     fetchMessages();
   }, [selectedChat, chatType, token]);
 
+  // Mark messages as read when chat is opened
+  useEffect(() => {
+    if (socket && selectedChat && chatType === "user") {
+      socket.emit("mark-messages-read", { senderId: selectedChat._id, receiverId: user.id });
+      setMessages((prev) => prev.map(m => m.senderId === selectedChat._id ? { ...m, status: "read" } : m));
+    }
+  }, [selectedChat, socket, chatType, user.id]);
+
   // Socket listeners for messages
   useEffect(() => {
     if (!socket) return;
@@ -73,12 +81,21 @@ export default function Chat() {
         chatType === "user" &&
         msg.senderId === selectedChat._id
       ) {
-        setMessages((prev) => [...prev, msg]);
+        setMessages((prev) => [...prev, { ...msg, status: "read" }]);
+        socket.emit("mark-messages-read", { senderId: msg.senderId, receiverId: user.id });
       }
     });
 
     socket.on("message-sent", (msg) => {
       setMessages((prev) => [...prev, msg]);
+    });
+
+    socket.on("messages-read", ({ byUserId }) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.receiverId === byUserId ? { ...m, status: "read" } : m
+        )
+      );
     });
 
     socket.on("receive-group-message", (msg) => {
@@ -104,6 +121,7 @@ export default function Chat() {
     return () => {
       socket.off("receive-message");
       socket.off("message-sent");
+      socket.off("messages-read");
       socket.off("receive-group-message");
       socket.off("incoming-call");
       socket.off("call-accepted");
@@ -206,6 +224,7 @@ export default function Chat() {
       <div className="flex-1 flex flex-col">
         {selectedChat ? (
           <ChatWindow
+            socket={socket}
             selectedChat={selectedChat}
             chatType={chatType}
             messages={messages}
@@ -215,28 +234,37 @@ export default function Chat() {
             onStartCall={chatType === "user" ? startCall : null}
           />
         ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-violet-600/20 to-cyan-600/20 flex items-center justify-center">
-                <svg
-                  className="w-12 h-12 text-violet-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
+          <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-[#0f0c29]/50 via-[#13102e]/50 to-[#1a1540]/50 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-5 mix-blend-overlay" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg width=\\'60\\' height=\\'60\\' viewBox=\\'0 0 60 60\\' xmlns=\\'http://www.w3.org/2000/svg\\'%3E%3Cg fill=\\'none\\' fill-rule=\\'evenodd\\'%3E%3Cg fill=\\'%23ffffff\\' fill-opacity=\\'1\\'%3E%3Cpath d=\\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')" }}></div>
+            <div className="text-center relative z-10 animate-in fade-in zoom-in duration-700">
+              <div className="relative w-32 h-32 mx-auto mb-8">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-600 to-cyan-600 opacity-20 blur-2xl animate-pulse"></div>
+                <div className="relative w-full h-full rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-xl group-hover:scale-105 transition-transform">
+                  <svg
+                    className="w-16 h-16"
+                    style={{ stroke: 'url(#chatGradient)', fill: 'none' }}
+                    viewBox="0 0 24 24"
+                  >
+                    <defs>
+                      <linearGradient id="chatGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#8b5cf6" />
+                        <stop offset="100%" stopColor="#06b6d4" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">
-                Start a conversation
+              <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-3 tracking-tight">
+                Your Conversations
               </h3>
-              <p className="text-gray-500">
-                Select a user or group from the sidebar
+              <p className="text-gray-400 font-medium max-w-sm mx-auto leading-relaxed">
+                Select a user or group from the sidebar to start chatting or initiate a video call.
               </p>
             </div>
           </div>
@@ -245,36 +273,39 @@ export default function Chat() {
 
       {/* Incoming call notification */}
       {incomingCall && !callActive && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1e1b4b] border border-violet-500/30 rounded-2xl p-8 text-center shadow-2xl animate-pulse">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
-              <svg
-                className="w-10 h-10 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                />
-              </svg>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xl flex items-center justify-center z-50 animate-in fade-in duration-300">
+          <div className="relative bg-[#1e1b4b]/80 border border-violet-500/50 rounded-3xl p-10 text-center shadow-[0_0_50px_rgba(139,92,246,0.2)] backdrop-blur-3xl transform scale-100 animate-in zoom-in-95 duration-300 min-w-[320px]">
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
+            
+            <div className="relative w-28 h-28 mx-auto mb-6">
+              <div className="absolute inset-0 rounded-full bg-emerald-500/30 blur-xl animate-pulse"></div>
+              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-lg ring-4 ring-emerald-500/30">
+                <svg
+                  className="w-14 h-14 text-white animate-bounce"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">
-              {incomingCall.name} is calling...
+            
+            <h3 className="text-2xl font-bold text-white mb-2 tracking-wide">
+              {incomingCall.name}
             </h3>
-            <div className="flex gap-4 mt-6 justify-center">
+            <p className="text-emerald-400 font-medium mb-8 animate-pulse">Incoming video call...</p>
+            
+            <div className="flex gap-4 justify-center relative z-10">
               <button
                 onClick={acceptCall}
-                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium hover:from-green-400 hover:to-emerald-400 transition-all cursor-pointer"
+                className="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-bold tracking-wide hover:from-emerald-400 hover:to-green-500 transition-all cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.4)] hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] hover:-translate-y-1"
               >
                 Accept
               </button>
               <button
                 onClick={() => setIncomingCall(null)}
-                className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-xl font-medium hover:from-red-400 hover:to-rose-400 transition-all cursor-pointer"
+                className="flex-1 py-3.5 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-bold tracking-wide hover:from-red-400 hover:to-rose-500 transition-all cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:shadow-[0_0_25px_rgba(239,68,68,0.6)] hover:-translate-y-1"
               >
                 Decline
               </button>

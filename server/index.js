@@ -15,6 +15,12 @@ const groupRoutes = require("./routes/groups");
 const messageRoutes = require("./routes/messages");
 const Message = require("./models/Message");
 const Group = require("./models/Group");
+const User = require("./models/User");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+let talkBotId = null;
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "dummy_key_if_not_set");
+const aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const app = express();
 const server = http.createServer(app);
@@ -44,10 +50,21 @@ io.on("connection", (socket) => {
   console.log("Socket connected:", socket.id);
 
   // User comes online
-  socket.on("user-online", (userId) => {
+  socket.on("user-online", async (userId) => {
     onlineUsers.set(userId, socket.id);
     io.emit("online-users", Array.from(onlineUsers.keys()));
     console.log(`User ${userId} is online`);
+    
+    try {
+      // Mark messages as delivered for this user
+      await Message.updateMany(
+        { receiverId: userId, status: "sent" },
+        { $set: { status: "delivered" } }
+      );
+      // We could broadcast to senders that messages were delivered, but standard read receipts is usually enough for a resume project.
+    } catch (err) {
+      console.error("Error marking delivered:", err);
+    }
   });
 
   // Send message
@@ -55,18 +72,22 @@ io.on("connection", (socket) => {
     const { senderId, receiverId, content } = data;
 
     try {
+      // Determine initial status based on if receiver is online
+      const receiverSocketId = onlineUsers.get(receiverId);
+      const initialStatus = receiverSocketId ? "delivered" : "sent";
+
       // Save message to MongoDB
-      const message = new Message({ senderId, receiverId, content });
+      const message = new Message({ senderId, receiverId, content, status: initialStatus });
       await message.save();
 
       // Emit to receiver if online
-      const receiverSocketId = onlineUsers.get(receiverId);
       if (receiverSocketId) {
         io.to(receiverSocketId).emit("receive-message", {
           _id: message._id,
           senderId,
           receiverId,
           content,
+          status: initialStatus,
           createdAt: message.createdAt,
         });
       }
@@ -77,10 +98,84 @@ io.on("connection", (socket) => {
         senderId,
         receiverId,
         content,
+        status: initialStatus,
         createdAt: message.createdAt,
       });
+
+      // --- AI TalkBot Logic ---
+      if (receiverId === talkBotId?.toString()) {
+        try {
+          // Send typing indicator to user
+          const senderSocketId = onlineUsers.get(senderId);
+          if (senderSocketId) {
+            io.to(senderSocketId).emit("typing", { from: talkBotId });
+          }
+
+          const result = await aiModel.generateContent(content);
+          const aiReply = result.response.text();
+          
+          if (senderSocketId) {
+            io.to(senderSocketId).emit("stop-typing", { from: talkBotId });
+          }
+
+          const botMessage = new Message({
+            senderId: talkBotId,
+            receiverId: senderId,
+            content: aiReply,
+            status: "delivered"
+          });
+          await botMessage.save();
+          
+          socket.emit("receive-message", {
+            _id: botMessage._id,
+            senderId: talkBotId,
+            receiverId: senderId,
+            content: aiReply,
+            status: "delivered",
+            createdAt: botMessage.createdAt,
+          });
+        } catch (aiError) {
+          console.error("Gemini AI Error:", aiError);
+        }
+      }
+
     } catch (error) {
       console.error("Error saving message:", error);
+    }
+  });
+
+  // Typing indicators
+  socket.on("typing", (data) => {
+    const receiverSocketId = onlineUsers.get(data.to);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("typing", { from: data.from });
+    }
+  });
+
+  socket.on("stop-typing", (data) => {
+    const receiverSocketId = onlineUsers.get(data.to);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("stop-typing", { from: data.from });
+    }
+  });
+
+  // Read receipts
+  socket.on("mark-messages-read", async (data) => {
+    const { senderId, receiverId } = data; // receiverId is the one who read the messages
+    try {
+      await Message.updateMany(
+        { senderId, receiverId, status: { $ne: "read" } },
+        { $set: { status: "read" } }
+      );
+      
+      const senderSocketId = onlineUsers.get(senderId);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("messages-read", {
+          byUserId: receiverId
+        });
+      }
+    } catch (err) {
+      console.error("Error marking messages read:", err);
     }
   });
 
@@ -164,17 +259,43 @@ io.on("connection", (socket) => {
   });
 });
 
+const { MongoMemoryServer } = require("mongodb-memory-server");
+
 // Connect to MongoDB and start server
 const PORT = process.env.PORT || 5000;
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
+const startServer = async () => {
+  try {
+    let mongoUri = process.env.MONGO_URI;
+    
+    // Fallback to in-memory server if local connection string or none provided
+    if (!mongoUri || mongoUri.includes("127.0.0.1") || mongoUri.includes("localhost")) {
+      console.log("Starting in-memory MongoDB database...");
+      const mongoServer = await MongoMemoryServer.create();
+      mongoUri = mongoServer.getUri();
+    }
+
+    await mongoose.connect(mongoUri);
     console.log("Connected to MongoDB");
+
+    // Initialize TalkBot usernot 
+    let botUser = await User.findOne({ email: "talkbot@system.local" });
+    if (!botUser) {
+      botUser = new User({
+        name: "🤖 TalkBot (AI)",
+        email: "talkbot@system.local",
+        password: "system_generated_bot_pwd_123!" 
+      });
+      await botUser.save();
+    }
+    talkBotId = botUser._id;
+    
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
-  })
-  .catch((err) => {
+  } catch (err) {
     console.error("MongoDB connection error:", err);
-  });
+  }
+};
+
+startServer();
