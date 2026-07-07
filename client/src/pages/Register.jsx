@@ -22,7 +22,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await axios.post("http://localhost:5000/api/auth/send-otp", {
+      await axios.post("https://talkflow-backend-k286.onrender.com/api/auth/send-otp", {
         email,
       });
       setOtpSent(true);
@@ -40,7 +40,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/register", {
+      const res = await axios.post("https://talkflow-backend-k286.onrender.com/api/auth/register", {
         name,
         email,
         password,

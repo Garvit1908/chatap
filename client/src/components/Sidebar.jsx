@@ -38,7 +38,7 @@ export default function Sidebar({
     if (!groupName.trim() || selectedMembers.length === 0) return;
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/groups",
+        "https://talkflow-backend-k286.onrender.com/api/groups",
         { name: groupName, members: selectedMembers },
         { headers: { Authorization: `Bearer ${token}` } }
       );

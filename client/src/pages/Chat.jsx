@@ -23,10 +23,10 @@ export default function Chat() {
     const fetchData = async () => {
       try {
         const [usersRes, groupsRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/users", {
+          axios.get("https://talkflow-backend-k286.onrender.com/api/users", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("http://localhost:5000/api/groups", {
+          axios.get("https://talkflow-backend-k286.onrender.com/api/groups", {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -47,9 +47,9 @@ export default function Chat() {
       try {
         let url = "";
         if (chatType === "user") {
-          url = `http://localhost:5000/api/messages/${selectedChat._id}`;
+          url = `https://talkflow-backend-k286.onrender.com/api/messages/${selectedChat._id}`;
         } else {
-          url = `http://localhost:5000/api/messages/group/${selectedChat._id}`;
+          url = `https://talkflow-backend-k286.onrender.com/api/messages/group/${selectedChat._id}`;
         }
         const res = await axios.get(url, {
           headers: { Authorization: `Bearer ${token}` },
