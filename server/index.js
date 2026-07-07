@@ -6,8 +6,11 @@ const { Server } = require("socket.io");
 const dns = require("dns");
 require("dotenv").config();
 
-// Use Google DNS to resolve MongoDB SRV records
+// Use Google DNS and force IPv4 to fix Render's ENETUNREACH SMTP issue
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
