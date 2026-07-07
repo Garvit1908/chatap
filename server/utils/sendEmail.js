@@ -8,8 +8,8 @@ const sendEmail = async (options) => {
     if (process.env.SMTP_HOST && process.env.SMTP_USER) {
       transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT || 587,
-        secure: process.env.SMTP_SECURE === 'true', 
+        port: 465, // Force 465 (SSL) because Render blocks 587
+        secure: true, // Port 465 requires secure: true
         family: 4, // Force IPv4 to bypass Render's IPv6 issue
         auth: {
           user: process.env.SMTP_USER,
