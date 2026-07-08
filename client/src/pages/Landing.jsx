@@ -1,11 +1,18 @@
 import { Link } from "react-router-dom";
+import Aurora from "../components/Aurora";
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0e1a] to-[#12172b] relative overflow-hidden text-white font-sans">
-      {/* Background Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-violet-600/20 blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-600/20 blur-[120px] pointer-events-none"></div>
+      {/* Aurora Background */}
+      <div className="absolute inset-0 z-0 opacity-40">
+        <Aurora
+          colorStops={["#7c3aed", "#d946ef", "#06b6d4"]}
+          blend={0.6}
+          amplitude={1.2}
+          speed={0.4}
+        />
+      </div>
 
       {/* Navbar */}
       <nav className="relative z-10 px-6 py-4 md:px-12 md:py-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
