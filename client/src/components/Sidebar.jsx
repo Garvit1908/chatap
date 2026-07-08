@@ -83,7 +83,7 @@ export default function Sidebar({
   };
 
   return (
-    <div className="w-full md:w-80 bg-gradient-to-b from-[#13102e] to-[#0f0c29] border-r border-white/10 flex flex-col h-full shadow-2xl relative z-20">
+    <div className="w-full md:w-80 bg-white/[0.02] backdrop-blur-2xl border-r border-white/10 flex flex-col h-full shadow-[4px_0_32px_rgba(0,0,0,0.3)] relative z-20">
       {/* Header */}
       <div className="p-6 border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
         <div className="flex items-center justify-between mb-6">
@@ -240,14 +240,14 @@ export default function Sidebar({
             {/* Create group button */}
             <button
               onClick={() => setShowCreateGroup(!showCreateGroup)}
-              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-gradient-to-r hover:from-violet-600/20 hover:to-cyan-600/20 border border-white/5 hover:border-violet-500/30 transition-all duration-300 hover:scale-[1.02] cursor-pointer mb-2 group"
+              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-gradient-to-r hover:from-violet-600/20 hover:to-fuchsia-600/20 border border-white/5 hover:border-violet-500/30 transition-all duration-300 hover:scale-[1.02] cursor-pointer mb-2 group"
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-600 to-cyan-500 flex items-center justify-center text-white shadow-md group-hover:rotate-90 transition-transform duration-500">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-500 flex items-center justify-center text-white shadow-md group-hover:rotate-90 transition-transform duration-500">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
-              <p className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400 text-sm font-bold tracking-wide">
+              <p className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 text-sm font-bold tracking-wide">
                 New Group
               </p>
             </button>
@@ -294,7 +294,7 @@ export default function Sidebar({
                 </div>
                 <button
                   onClick={createGroup}
-                  className="w-full py-2.5 bg-gradient-to-r from-violet-600 to-cyan-600 text-white text-sm font-bold rounded-xl hover:from-violet-500 hover:to-cyan-500 transition-all duration-300 shadow-[0_0_15px_rgba(124,58,237,0.3)] hover:shadow-[0_0_25px_rgba(124,58,237,0.5)] cursor-pointer"
+                  className="w-full py-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-sm font-bold rounded-xl hover:from-violet-500 hover:to-fuchsia-500 transition-all duration-300 shadow-[0_8px_25px_rgba(124,58,237,0.3)] hover:shadow-[0_12px_30px_rgba(124,58,237,0.5)] cursor-pointer"
                 >
                   Create Group
                 </button>

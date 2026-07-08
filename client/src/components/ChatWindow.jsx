@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import EmojiPicker from "emoji-picker-react";
 
 export default function ChatWindow({
   socket,
@@ -13,8 +14,13 @@ export default function ChatWindow({
 }) {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+
+  const onEmojiClick = (emojiObject) => {
+    setInput((prev) => prev + emojiObject.emoji);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -99,7 +105,7 @@ export default function ChatWindow({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-[#0f0c29]/95 via-[#13102e]/95 to-[#1a1540]/95 relative overflow-hidden">
+    <div className="flex flex-col h-full bg-gradient-to-br from-[#0a0e1a]/95 to-[#12172b]/95 relative overflow-hidden">
       {/* Header */}
       <div className="px-4 md:px-6 py-3 md:py-4 border-b border-white/10 flex items-center justify-between bg-white/[0.03] backdrop-blur-xl z-20 shadow-sm">
         <div className="flex items-center gap-3 md:gap-4">
@@ -181,7 +187,7 @@ export default function ChatWindow({
               <div
                 className={`max-w-[75%] rounded-3xl px-5 py-3.5 shadow-md backdrop-blur-sm ${
                   isOwn
-                    ? "bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-br-sm border border-violet-500/20"
+                    ? "bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white font-medium rounded-br-sm border border-violet-500/30"
                     : "bg-white/10 text-gray-100 rounded-bl-sm border border-white/5"
                 }`}
               >
@@ -229,33 +235,55 @@ export default function ChatWindow({
       </div>
 
       {/* Input */}
-      <form
-        onSubmit={handleSend}
-        className="p-3 md:p-4 bg-transparent flex gap-3 relative z-20"
-      >
-        <div className="flex-1 relative group">
-          <input
-            type="text"
-            value={input}
-            onChange={handleInputChange}
-            placeholder="Type your message..."
-            className="w-full pl-5 pr-12 py-4 bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-300 shadow-[0_-5px_25px_rgba(0,0,0,0.2)]"
-          />
-          <button
-            type="submit"
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full hover:from-cyan-400 hover:to-blue-500 transition-all cursor-pointer shadow-md hover:scale-105 hover:shadow-[0_0_15px_rgba(6,182,212,0.5)]"
-          >
-            <svg
-              className="w-5 h-5 -ml-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+      <div className="relative">
+        {showEmojiPicker && (
+          <div className="absolute bottom-full right-4 mb-4 z-50 animate-in slide-in-from-bottom-2 duration-200">
+            <EmojiPicker
+              onEmojiClick={onEmojiClick}
+              theme="dark"
+              searchDisabled
+              skinTonesDisabled
+              height={350}
+            />
+          </div>
+        )}
+        <form
+          onSubmit={handleSend}
+          className="p-3 md:p-4 bg-transparent flex gap-3 relative z-20"
+        >
+          <div className="flex-1 relative group flex items-center bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-full shadow-[0_-5px_25px_rgba(0,0,0,0.2)] focus-within:ring-2 focus-within:ring-violet-500/50 transition-all duration-300">
+            <button
+              type="button"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="p-3 text-gray-400 hover:text-fuchsia-400 transition-colors ml-1 cursor-pointer"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          </button>
-        </div>
-      </form>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+            <input
+              type="text"
+              value={input}
+              onChange={handleInputChange}
+              placeholder="Type your message..."
+              className="flex-1 py-4 px-2 bg-transparent text-white placeholder-gray-400 focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="mr-1.5 p-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-full hover:from-violet-500 hover:to-fuchsia-500 transition-all cursor-pointer shadow-md hover:scale-105 hover:shadow-[0_0_15px_rgba(217,70,239,0.5)]"
+            >
+              <svg
+                className="w-5 h-5 -ml-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
