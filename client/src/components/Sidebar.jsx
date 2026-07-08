@@ -205,18 +205,21 @@ export default function Sidebar({
                   </div>
                   <span
                     className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-[#13102e] ${
-                      onlineUsers.includes(u._id)
-                        ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
-                        : "bg-gray-500"
+                      (() => {
+                        const isOnline = onlineUsers.includes(u._id) || u.email === "talkbot@system.local";
+                        return isOnline
+                          ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                          : "bg-gray-500";
+                      })()
                     }`}
                   ></span>
                 </div>
                 <div className="text-left flex-1">
                   <p className="text-gray-100 text-sm font-semibold tracking-wide">{u.name}</p>
                   <p
-                    className={`text-xs font-medium mt-0.5 ${onlineUsers.includes(u._id) ? "text-emerald-400" : "text-gray-500"}`}
+                    className={`text-xs font-medium mt-0.5 ${(onlineUsers.includes(u._id) || u.email === "talkbot@system.local") ? "text-emerald-400" : "text-gray-500"}`}
                   >
-                    {onlineUsers.includes(u._id) ? "Active now" : "Offline"}
+                    {(onlineUsers.includes(u._id) || u.email === "talkbot@system.local") ? "Active now" : "Offline"}
                   </p>
                 </div>
               </button>

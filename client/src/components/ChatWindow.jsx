@@ -118,7 +118,7 @@ export default function ChatWindow({
             >
               {getInitial(selectedChat.name)}
             </div>
-            {chatType === "user" && onlineUsers.includes(selectedChat._id) && (
+            {chatType === "user" && (onlineUsers.includes(selectedChat._id) || selectedChat.email === "talkbot@system.local") && (
               <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-[#13102e] bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
             )}
           </div>
@@ -127,12 +127,14 @@ export default function ChatWindow({
               {selectedChat.name}
             </h2>
             {chatType === "user" ? (
-              <p className="text-emerald-400 text-xs flex items-center gap-1.5 font-medium mt-0.5">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                </span>
-                {onlineUsers.includes(selectedChat._id) ? "Active now" : "Offline"}
+              <p className={`text-xs flex items-center gap-1.5 font-medium mt-0.5 ${(onlineUsers.includes(selectedChat._id) || selectedChat.email === "talkbot@system.local") ? "text-emerald-400" : "text-gray-500"}`}>
+                {(onlineUsers.includes(selectedChat._id) || selectedChat.email === "talkbot@system.local") && (
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                  </span>
+                )}
+                {(onlineUsers.includes(selectedChat._id) || selectedChat.email === "talkbot@system.local") ? "Active now" : "Offline"}
               </p>
             ) : (
               <p className="text-cyan-400 text-xs font-medium mt-0.5 flex items-center gap-1.5">
