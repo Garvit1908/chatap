@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const dns = require("dns");
 
 const sendEmail = async (options) => {
   try {
@@ -6,15 +7,33 @@ const sendEmail = async (options) => {
 
     // Use environment variables if provided
     if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+      // Manually resolve SMTP host to IPv4 — Render's IPv6 is broken
+      let smtpHost = process.env.SMTP_HOST;
+      try {
+        const ipv4Addresses = await dns.promises.resolve4(smtpHost);
+        if (ipv4Addresses.length > 0) {
+          console.log(`Resolved ${smtpHost} to IPv4: ${ipv4Addresses[0]}`);
+          smtpHost = ipv4Addresses[0];
+        }
+      } catch (dnsErr) {
+        console.warn("IPv4 DNS resolution failed, using hostname:", dnsErr.message);
+      }
+
       transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: 465, // Force 465 (SSL) because Render blocks 587
-        secure: true, // Port 465 requires secure: true
-        family: 4, // Force IPv4 to bypass Render's IPv6 issue
+        host: smtpHost,
+        port: 465,
+        secure: true,
+        tls: {
+          servername: process.env.SMTP_HOST, // Original hostname for TLS cert validation
+          rejectUnauthorized: true,
+        },
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 15000,
       });
     } else {
       // Fallback: Just log it to the console for local development
@@ -54,3 +73,4 @@ const sendEmail = async (options) => {
 };
 
 module.exports = sendEmail;
+
