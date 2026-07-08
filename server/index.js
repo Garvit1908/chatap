@@ -23,7 +23,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 let talkBotId = null;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "dummy_key_if_not_set");
-const aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
 const app = express();
 const server = http.createServer(app);

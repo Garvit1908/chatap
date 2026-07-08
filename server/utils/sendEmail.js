@@ -1,6 +1,6 @@
 const sendEmail = async (options) => {
   try {
-    // Use Brevo HTTP API (SMTP ports are blocked on Render free tier)
+    // Brevo HTTP API 
     if (process.env.BREVO_API_KEY) {
       const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
