@@ -1,19 +1,11 @@
 import { Link } from "react-router-dom";
-import Orb from "../components/Orb";
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0e1a] to-[#12172b] relative overflow-hidden text-white font-sans">
-      {/* Orb Background */}
-      <div className="absolute inset-0 z-0 pointer-events-none" style={{ height: '100%' }}>
-        <Orb
-          hue={260}
-          hoverIntensity={0.5}
-          rotateOnHover={true}
-          forceHoverState={false}
-          backgroundColor="#0a0e1a"
-        />
-      </div>
+      {/* Background Orbs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-violet-600/20 blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-600/20 blur-[120px] pointer-events-none"></div>
 
       {/* Navbar */}
       <nav className="relative z-10 px-6 py-4 md:px-12 md:py-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
