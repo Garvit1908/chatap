@@ -119,12 +119,12 @@ io.on("connection", (socket) => {
             method: "POST",
             headers: {
               "Authorization": `Bearer ${openRouterKey}`,
-              "HTTP-Referer": "https://talkflow.onrender.com", 
+              "HTTP-Referer": "https://talkflow-frontend-s10c.onrender.com", 
               "X-Title": "TalkFlow App",
               "Content-Type": "application/json"
             },
             body: JSON.stringify({
-              "model": "meta-llama/llama-3-8b-instruct:free",
+              "model": "meta-llama/llama-3.3-70b-instruct:free",
               "messages": [
                 { "role": "system", "content": "You are TalkBot, a friendly and extremely helpful AI assistant built into the TalkFlow chat app. Keep your answers concise, helpful, and friendly." },
                 { "role": "user", "content": content }
@@ -132,7 +132,8 @@ io.on("connection", (socket) => {
             })
           });
           const apiData = await response.json();
-          const aiReply = apiData.choices?.[0]?.message?.content || "Sorry, I am having trouble connecting to my brain right now!";
+          console.log("OpenRouter response:", JSON.stringify(apiData).substring(0, 300));
+          const aiReply = apiData.choices?.[0]?.message?.content || apiData.error?.message || "Sorry, I am having trouble connecting to my brain right now!";
           
           if (senderSocketId) {
             io.to(senderSocketId).emit("stop-typing", { from: talkBotId });
