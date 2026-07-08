@@ -1,8 +1,18 @@
 import { Link } from "react-router-dom";
+import Aurora from "../components/Aurora";
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0e1a] to-[#12172b] relative overflow-hidden text-white font-sans">
+      {/* Aurora Background */}
+      <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
+        <Aurora
+          colorStops={["#7c3aed", "#d946ef", "#06b6d4"]}
+          blend={0.6}
+          amplitude={1.2}
+          speed={0.4}
+        />
+      </div>
       {/* Background Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-violet-600/20 blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-600/20 blur-[120px] pointer-events-none"></div>
