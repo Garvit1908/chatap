@@ -19,7 +19,23 @@ export default function Chat() {
   const [callData, setCallData] = useState(null);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
 
-  // Fetch users and groups
+  const usersRef = useRef(users);
+  useEffect(() => {
+    usersRef.current = users;
+  }, [users]);
+
+  const fetchActiveUsers = async () => {
+    try {
+      const res = await axios.get("https://talkflow-backend-k286.onrender.com/api/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsers(res.data);
+    } catch (err) {
+      console.error("Error fetching active users:", err);
+    }
+  };
+
+  // Fetch users and groups initially
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -77,6 +93,11 @@ export default function Chat() {
     if (!socket) return;
 
     socket.on("receive-message", (msg) => {
+      // Re-fetch user list if sender isn't in active users sidebar
+      if (msg.senderId && !usersRef.current.some(u => u._id === msg.senderId)) {
+        fetchActiveUsers();
+      }
+
       if (
         selectedChat &&
         chatType === "user" &&
@@ -188,6 +209,9 @@ export default function Chat() {
   };
 
   const handleSelectUser = (u) => {
+    if (!users.some((user) => user._id === u._id)) {
+      setUsers((prev) => [u, ...prev]);
+    }
     setSelectedChat(u);
     setChatType("user");
     setMessages([]);

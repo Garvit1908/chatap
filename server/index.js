@@ -124,7 +124,7 @@ io.on("connection", (socket) => {
               "Content-Type": "application/json"
             },
             body: JSON.stringify({
-              "model": "meta-llama/llama-3.3-70b-instruct:free",
+              "model": "openrouter/auto",
               "messages": [
                 { "role": "system", "content": "You are TalkBot, a friendly and extremely helpful AI assistant built into the TalkFlow chat app. Keep your answers concise, helpful, and friendly." },
                 { "role": "user", "content": content }

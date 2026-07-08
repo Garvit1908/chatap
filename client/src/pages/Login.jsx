@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 
 export default function Login() {
@@ -32,6 +33,28 @@ export default function Login() {
         setError("Cannot reach server. It may be starting up — please try again in 30 seconds.");
       } else {
         setError(err.response?.data?.message || "Login failed");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError("");
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API_BASE}/api/auth/google`, {
+        credential: credentialResponse.credential,
+      }, { timeout: 30000 });
+      login(res.data.user, res.data.token);
+      navigate("/chat");
+    } catch (err) {
+      if (err.code === "ECONNABORTED" || err.message?.includes("timeout")) {
+        setError("Server is waking up (free tier). Please wait a moment and try again.");
+      } else if (!err.response) {
+        setError("Cannot reach server. It may be starting up — please try again in 30 seconds.");
+      } else {
+        setError(err.response?.data?.message || "Google login failed");
       }
     } finally {
       setLoading(false);
@@ -127,6 +150,26 @@ export default function Login() {
               )}
             </button>
           </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-white/10"></div>
+            <span className="text-gray-500 text-xs font-medium uppercase tracking-wider">or</span>
+            <div className="flex-1 h-px bg-white/10"></div>
+          </div>
+
+          {/* Google Sign-In */}
+          <div className="flex justify-center [&>div]:w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError("Google sign-in failed. Please try again.")}
+              theme="filled_black"
+              shape="pill"
+              size="large"
+              text="continue_with"
+              width="400"
+            />
+          </div>
 
           <p className="text-gray-400 text-sm text-center mt-6">
             Don't have an account?{" "}

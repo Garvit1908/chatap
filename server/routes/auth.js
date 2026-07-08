@@ -122,4 +122,54 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// POST /api/auth/google
+router.post("/google", async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ message: "Google credential is required" });
+    }
+
+    const { OAuth2Client } = require("google-auth-library");
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
+
+    // Find existing user or create new one
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user with a random password (they'll use Google to login)
+      const salt = await bcrypt.genSalt(10);
+      const randomPassword = await bcrypt.hash(googleId + Date.now(), salt);
+
+      user = new User({
+        name,
+        email,
+        password: randomPassword,
+      });
+      await user.save();
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    res.json({
+      token,
+      user: { id: user._id, name: user.name, email: user.email },
+    });
+  } catch (error) {
+    console.error("Google Auth Error:", error);
+    res.status(500).json({ message: "Google authentication failed", error: error.message });
+  }
+});
+
 module.exports = router;
