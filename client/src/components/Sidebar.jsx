@@ -203,24 +203,29 @@ export default function Sidebar({
                   >
                     {getInitial(u.name)}
                   </div>
-                  <span
-                    className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-[#13102e] ${
-                      (() => {
-                        const isOnline = onlineUsers.includes(u._id) || u.email === "talkbot@system.local";
-                        return isOnline
+                  {u.email !== "talkbot@system.local" && (
+                    <span
+                      className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-[#13102e] ${
+                        onlineUsers.includes(u._id)
                           ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
-                          : "bg-gray-500";
-                      })()
-                    }`}
-                  ></span>
+                          : "bg-gray-500"
+                      }`}
+                    ></span>
+                  )}
                 </div>
                 <div className="text-left flex-1">
                   <p className="text-gray-100 text-sm font-semibold tracking-wide">{u.name}</p>
-                  <p
-                    className={`text-xs font-medium mt-0.5 ${(onlineUsers.includes(u._id) || u.email === "talkbot@system.local") ? "text-emerald-400" : "text-gray-500"}`}
-                  >
-                    {(onlineUsers.includes(u._id) || u.email === "talkbot@system.local") ? "Active now" : "Offline"}
-                  </p>
+                  {u.email === "talkbot@system.local" ? (
+                    <p className="text-xs font-medium mt-0.5 text-cyan-400">
+                      AI Assistant
+                    </p>
+                  ) : (
+                    <p
+                      className={`text-xs font-medium mt-0.5 ${onlineUsers.includes(u._id) ? "text-emerald-400" : "text-gray-500"}`}
+                    >
+                      {onlineUsers.includes(u._id) ? "Active now" : "Offline"}
+                    </p>
+                  )}
                 </div>
               </button>
             ))}

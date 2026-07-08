@@ -118,7 +118,7 @@ export default function ChatWindow({
             >
               {getInitial(selectedChat.name)}
             </div>
-            {chatType === "user" && (onlineUsers.includes(selectedChat._id) || selectedChat.email === "talkbot@system.local") && (
+            {chatType === "user" && onlineUsers.includes(selectedChat._id) && selectedChat.email !== "talkbot@system.local" && (
               <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-[#13102e] bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
             )}
           </div>
@@ -127,15 +127,21 @@ export default function ChatWindow({
               {selectedChat.name}
             </h2>
             {chatType === "user" ? (
-              <p className={`text-xs flex items-center gap-1.5 font-medium mt-0.5 ${(onlineUsers.includes(selectedChat._id) || selectedChat.email === "talkbot@system.local") ? "text-emerald-400" : "text-gray-500"}`}>
-                {(onlineUsers.includes(selectedChat._id) || selectedChat.email === "talkbot@system.local") && (
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                  </span>
-                )}
-                {(onlineUsers.includes(selectedChat._id) || selectedChat.email === "talkbot@system.local") ? "Active now" : "Offline"}
-              </p>
+              selectedChat.email === "talkbot@system.local" ? (
+                <p className="text-cyan-400 text-xs font-medium mt-0.5">
+                  AI Assistant
+                </p>
+              ) : (
+                <p className={`text-xs flex items-center gap-1.5 font-medium mt-0.5 ${onlineUsers.includes(selectedChat._id) ? "text-emerald-400" : "text-gray-500"}`}>
+                  {onlineUsers.includes(selectedChat._id) && (
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                  )}
+                  {onlineUsers.includes(selectedChat._id) ? "Active now" : "Offline"}
+                </p>
+              )
             ) : (
               <p className="text-cyan-400 text-xs font-medium mt-0.5 flex items-center gap-1.5">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
