@@ -19,11 +19,8 @@ const messageRoutes = require("./routes/messages");
 const Message = require("./models/Message");
 const Group = require("./models/Group");
 const User = require("./models/User");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-
+const openRouterKey = process.env.OPENROUTER_API_KEY;
 let talkBotId = null;
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "dummy_key_if_not_set");
-const aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
 const app = express();
 const server = http.createServer(app);
@@ -117,8 +114,25 @@ io.on("connection", (socket) => {
             io.to(senderSocketId).emit("typing", { from: talkBotId });
           }
 
-          const result = await aiModel.generateContent(content);
-          const aiReply = result.response.text();
+          // OpenRouter API call
+          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${openRouterKey}`,
+              "HTTP-Referer": "https://talkflow.onrender.com", 
+              "X-Title": "TalkFlow App",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              "model": "meta-llama/llama-3-8b-instruct:free",
+              "messages": [
+                { "role": "system", "content": "You are TalkBot, a friendly and extremely helpful AI assistant built into the TalkFlow chat app. Keep your answers concise, helpful, and friendly." },
+                { "role": "user", "content": content }
+              ]
+            })
+          });
+          const apiData = await response.json();
+          const aiReply = apiData.choices?.[0]?.message?.content || "Sorry, I am having trouble connecting to my brain right now!";
           
           if (senderSocketId) {
             io.to(senderSocketId).emit("stop-typing", { from: talkBotId });
