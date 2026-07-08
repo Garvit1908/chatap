@@ -1,16 +1,17 @@
 import { Link } from "react-router-dom";
-import Aurora from "../components/Aurora";
+import Orb from "../components/Orb";
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0e1a] to-[#12172b] relative overflow-hidden text-white font-sans">
-      {/* Aurora Background */}
-      <div className="absolute inset-0 z-0 opacity-40">
-        <Aurora
-          colorStops={["#7c3aed", "#d946ef", "#06b6d4"]}
-          blend={0.6}
-          amplitude={1.2}
-          speed={0.4}
+      {/* Orb Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none" style={{ height: '100%' }}>
+        <Orb
+          hue={260}
+          hoverIntensity={0.5}
+          rotateOnHover={true}
+          forceHoverState={false}
+          backgroundColor="#0a0e1a"
         />
       </div>
 
