@@ -15,6 +15,9 @@ export default function Register() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const API_BASE = "https://talkflow-backend-k286.onrender.com";
+  const REQUEST_TIMEOUT = 30000; // 30 seconds
+
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setError("");
@@ -22,13 +25,19 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await axios.post("https://talkflow-backend-k286.onrender.com/api/auth/send-otp", {
+      await axios.post(`${API_BASE}/api/auth/send-otp`, {
         email,
-      });
+      }, { timeout: REQUEST_TIMEOUT });
       setOtpSent(true);
       setSuccess("OTP has been sent to your email.");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to send OTP");
+      if (err.code === "ECONNABORTED" || err.message?.includes("timeout")) {
+        setError("Server is waking up (free tier). Please wait a moment and try again.");
+      } else if (!err.response) {
+        setError("Cannot reach server. It may be starting up — please try again in 30 seconds.");
+      } else {
+        setError(err.response?.data?.message || "Failed to send OTP");
+      }
     } finally {
       setLoading(false);
     }
@@ -40,16 +49,22 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await axios.post("https://talkflow-backend-k286.onrender.com/api/auth/register", {
+      const res = await axios.post(`${API_BASE}/api/auth/register`, {
         name,
         email,
         password,
         otp,
-      });
+      }, { timeout: REQUEST_TIMEOUT });
       login(res.data.user, res.data.token);
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      if (err.code === "ECONNABORTED" || err.message?.includes("timeout")) {
+        setError("Server is waking up (free tier). Please wait a moment and try again.");
+      } else if (!err.response) {
+        setError("Cannot reach server. It may be starting up — please try again in 30 seconds.");
+      } else {
+        setError(err.response?.data?.message || "Registration failed");
+      }
     } finally {
       setLoading(false);
     }

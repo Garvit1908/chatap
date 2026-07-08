@@ -39,6 +39,9 @@ const io = new Server(server, {
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
+// Health check endpoint (keeps Render awake when pinged by UptimeRobot)
+app.get("/health", (req, res) => res.status(200).json({ status: "ok" }));
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);

@@ -11,20 +11,28 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const API_BASE = "https://talkflow-backend-k286.onrender.com";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const res = await axios.post("https://talkflow-backend-k286.onrender.com/api/auth/login", {
+      const res = await axios.post(`${API_BASE}/api/auth/login`, {
         email,
         password,
-      });
+      }, { timeout: 30000 });
       login(res.data.user, res.data.token);
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      if (err.code === "ECONNABORTED" || err.message?.includes("timeout")) {
+        setError("Server is waking up (free tier). Please wait a moment and try again.");
+      } else if (!err.response) {
+        setError("Cannot reach server. It may be starting up — please try again in 30 seconds.");
+      } else {
+        setError(err.response?.data?.message || "Login failed");
+      }
     } finally {
       setLoading(false);
     }
