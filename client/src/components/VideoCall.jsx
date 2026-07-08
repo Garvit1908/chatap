@@ -133,7 +133,7 @@ export default function VideoCall({ socket, callData, currentUser, onEndCall }) 
 
   return (
     <div className="absolute inset-0 bg-black/95 z-50 flex items-center justify-center backdrop-blur-2xl animate-in fade-in duration-500">
-      <div className="relative w-full max-w-5xl aspect-video bg-[#0f0c29]/80 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/10">
+      <div className="relative w-full h-full md:h-auto md:max-w-5xl md:aspect-video bg-[#0f0c29]/80 md:rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border-0 md:border border-white/10">
         
         {/* Remote Video (Full Screen) */}
         <video
@@ -155,7 +155,7 @@ export default function VideoCall({ socket, callData, currentUser, onEndCall }) 
         )}
 
         {/* Local Video (PiP) */}
-        <div className="absolute bottom-8 right-8 w-56 aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border-2 border-emerald-500/50 hover:scale-105 transition-transform duration-300">
+        <div className="absolute bottom-24 right-4 md:bottom-8 md:right-8 w-32 md:w-56 aspect-video bg-black rounded-xl md:rounded-2xl overflow-hidden shadow-2xl border-2 border-emerald-500/50 hover:scale-105 transition-transform duration-300 z-10">
           <video
             ref={localVideoRef}
             autoPlay
@@ -169,7 +169,7 @@ export default function VideoCall({ socket, callData, currentUser, onEndCall }) 
         </div>
 
         {/* Controls */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-6 px-8 py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl animate-in slide-in-from-bottom-5 duration-500">
+        <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 md:gap-6 px-6 md:px-8 py-3 md:py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl animate-in slide-in-from-bottom-5 duration-500 z-20">
           <button
             onClick={handleEndCall}
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-full font-bold tracking-wide hover:from-red-500 hover:to-rose-500 transition-all cursor-pointer shadow-[0_0_15px_rgba(225,29,72,0.5)] hover:shadow-[0_0_25px_rgba(225,29,72,0.7)] hover:-translate-y-1"

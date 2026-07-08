@@ -17,6 +17,7 @@ export default function Chat() {
   const [incomingCall, setIncomingCall] = useState(null);
   const [callActive, setCallActive] = useState(false);
   const [callData, setCallData] = useState(null);
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
 
   // Fetch users and groups
   useEffect(() => {
@@ -190,12 +191,14 @@ export default function Chat() {
     setSelectedChat(u);
     setChatType("user");
     setMessages([]);
+    setMobileChatOpen(true);
   };
 
   const handleSelectGroup = (g) => {
     setSelectedChat(g);
     setChatType("group");
     setMessages([]);
+    setMobileChatOpen(true);
   };
 
   const handleGroupCreated = (newGroup) => {
@@ -206,22 +209,24 @@ export default function Chat() {
   return (
     <div className="h-screen flex bg-[#0f0c29] overflow-hidden">
       {/* Sidebar */}
-      <Sidebar
-        users={users}
-        groups={groups}
-        onlineUsers={onlineUsers}
-        selectedChat={selectedChat}
-        chatType={chatType}
-        onSelectUser={handleSelectUser}
-        onSelectGroup={handleSelectGroup}
-        onGroupCreated={handleGroupCreated}
-        currentUser={user}
-        token={token}
-        onLogout={logout}
-      />
+      <div className={`${mobileChatOpen ? 'hidden' : 'flex'} md:flex w-full md:w-auto`}>
+        <Sidebar
+          users={users}
+          groups={groups}
+          onlineUsers={onlineUsers}
+          selectedChat={selectedChat}
+          chatType={chatType}
+          onSelectUser={handleSelectUser}
+          onSelectGroup={handleSelectGroup}
+          onGroupCreated={handleGroupCreated}
+          currentUser={user}
+          token={token}
+          onLogout={logout}
+        />
+      </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className={`${mobileChatOpen ? 'flex' : 'hidden'} md:flex flex-1 flex-col`}>
         {selectedChat ? (
           <ChatWindow
             socket={socket}
@@ -232,6 +237,7 @@ export default function Chat() {
             onSendMessage={sendMessage}
             onlineUsers={onlineUsers}
             onStartCall={chatType === "user" ? startCall : null}
+            onBack={() => setMobileChatOpen(false)}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-[#0f0c29]/50 via-[#13102e]/50 to-[#1a1540]/50 relative overflow-hidden">

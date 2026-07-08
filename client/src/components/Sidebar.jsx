@@ -19,6 +19,7 @@ export default function Sidebar({
   const [groupName, setGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [search, setSearch] = useState("");
+  const [groupError, setGroupError] = useState("");
 
   const filteredUsers = users.filter((u) =>
     u.name.toLowerCase().includes(search.toLowerCase())
@@ -35,7 +36,19 @@ export default function Sidebar({
   };
 
   const createGroup = async () => {
-    if (!groupName.trim() || selectedMembers.length === 0) return;
+    if (!groupName.trim() && selectedMembers.length === 0) {
+      setGroupError("Please enter a group name and select members");
+      return;
+    }
+    if (!groupName.trim()) {
+      setGroupError("Please enter a group name");
+      return;
+    }
+    if (selectedMembers.length === 0) {
+      setGroupError("Please select at least one member");
+      return;
+    }
+    setGroupError("");
     try {
       const res = await axios.post(
         "https://talkflow-backend-k286.onrender.com/api/groups",
@@ -70,7 +83,7 @@ export default function Sidebar({
   };
 
   return (
-    <div className="w-80 bg-gradient-to-b from-[#13102e] to-[#0f0c29] border-r border-white/10 flex flex-col h-full shadow-2xl relative z-20">
+    <div className="w-full md:w-80 bg-gradient-to-b from-[#13102e] to-[#0f0c29] border-r border-white/10 flex flex-col h-full shadow-2xl relative z-20">
       {/* Header */}
       <div className="p-6 border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
         <div className="flex items-center justify-between mb-6">
@@ -239,8 +252,16 @@ export default function Sidebar({
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
                   placeholder="Group Name..."
-                  className="w-full px-4 py-2.5 bg-black/20 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 mb-4 transition-all"
+                  className="w-full px-4 py-2.5 bg-black/20 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 mb-3 transition-all"
                 />
+                {groupError && (
+                  <p className="text-amber-400 text-xs font-medium mb-3 px-1 flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {groupError}
+                  </p>
+                )}
                 <p className="text-gray-400 text-xs font-semibold mb-3 tracking-wider uppercase">Select Members</p>
                 <div className="max-h-40 overflow-y-auto space-y-1.5 mb-4 scrollbar-hide pr-1">
                   {users.map((u) => (

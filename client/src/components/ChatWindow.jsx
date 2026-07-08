@@ -9,6 +9,7 @@ export default function ChatWindow({
   onSendMessage,
   onlineUsers,
   onStartCall,
+  onBack,
 }) {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -100,8 +101,17 @@ export default function ChatWindow({
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-[#0f0c29]/95 via-[#13102e]/95 to-[#1a1540]/95 relative overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-white/[0.03] backdrop-blur-xl z-20 shadow-sm">
-        <div className="flex items-center gap-4">
+      <div className="px-4 md:px-6 py-3 md:py-4 border-b border-white/10 flex items-center justify-between bg-white/[0.03] backdrop-blur-xl z-20 shadow-sm">
+        <div className="flex items-center gap-3 md:gap-4">
+          {/* Back button - mobile only */}
+          <button
+            onClick={onBack}
+            className="md:hidden p-2 -ml-1 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
           <div className="relative">
             <div
               className={`w-12 h-12 rounded-full bg-gradient-to-br ${getColor(selectedChat._id)} flex items-center justify-center text-white text-lg font-bold shadow-lg ring-2 ring-white/10`}
@@ -152,7 +162,7 @@ export default function ChatWindow({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide relative z-10">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6 scrollbar-hide relative z-10">
         {messages.map((m, i) => {
           const isOwn = m.senderId === currentUser.id;
           return (
@@ -213,7 +223,7 @@ export default function ChatWindow({
       {/* Input */}
       <form
         onSubmit={handleSend}
-        className="p-4 bg-transparent flex gap-3 relative z-20"
+        className="p-3 md:p-4 bg-transparent flex gap-3 relative z-20"
       >
         <div className="flex-1 relative group">
           <input
