@@ -30,4 +30,9 @@ const messageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes to optimize chat history queries
+messageSchema.index({ senderId: 1, receiverId: 1, createdAt: 1 });
+messageSchema.index({ receiverId: 1, senderId: 1, createdAt: 1 });
+messageSchema.index({ groupId: 1, createdAt: 1 });
+
 module.exports = mongoose.model("Message", messageSchema);

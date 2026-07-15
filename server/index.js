@@ -21,6 +21,7 @@ const Group = require("./models/Group");
 const User = require("./models/User");
 const openRouterKey = process.env.OPENROUTER_API_KEY;
 let talkBotId = null;
+const TALK_BOT_TIMEOUT_MS = 30_000;
 
 const app = express();
 const server = http.createServer(app);
@@ -107,56 +108,88 @@ io.on("connection", (socket) => {
 
       // --- AI TalkBot Logic ---
       if (receiverId === talkBotId?.toString()) {
+        const senderSocketId = onlineUsers.get(senderId);
+
+        const sendBotReply = async (content) => {
+          const botMessage = new Message({
+            senderId: talkBotId,
+            receiverId: senderId,
+            content,
+            status: "delivered",
+          });
+          await botMessage.save();
+
+          if (senderSocketId) {
+            io.to(senderSocketId).emit("receive-message", {
+              _id: botMessage._id,
+              senderId: talkBotId,
+              receiverId: senderId,
+              content,
+              status: "delivered",
+              createdAt: botMessage.createdAt,
+            });
+          }
+        };
+
         try {
           // Send typing indicator to user
-          const senderSocketId = onlineUsers.get(senderId);
           if (senderSocketId) {
             io.to(senderSocketId).emit("typing", { from: talkBotId });
           }
 
+          if (!openRouterKey) {
+            throw new Error("TalkBot is not configured: OPENROUTER_API_KEY is missing.");
+          }
+
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), TALK_BOT_TIMEOUT_MS);
+
           // OpenRouter API call
-          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${openRouterKey}`,
-              "HTTP-Referer": "https://talkflow-frontend-s10c.onrender.com", 
-              "X-Title": "TalkFlow App",
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              "model": "openrouter/auto",
-              "messages": [
-                { "role": "system", "content": "You are TalkBot, a friendly and extremely helpful AI assistant built into the TalkFlow chat app. Keep your answers concise, helpful, and friendly." },
-                { "role": "user", "content": content }
-              ]
-            })
-          });
+          let response;
+          try {
+            response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${openRouterKey}`,
+                "HTTP-Referer": "https://talkflow-frontend-s10c.onrender.com",
+                "X-Title": "TalkFlow App",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                "model": "openrouter/auto",
+                "messages": [
+                  { "role": "system", "content": "You are TalkBot, a friendly and extremely helpful AI assistant built into the TalkFlow chat app. Keep your answers concise, helpful, and friendly." },
+                  { "role": "user", "content": content },
+                ],
+              }),
+              signal: controller.signal,
+            });
+          } finally {
+            clearTimeout(timeout);
+          }
+
           const apiData = await response.json();
           console.log("OpenRouter response:", JSON.stringify(apiData).substring(0, 300));
-          const aiReply = apiData.choices?.[0]?.message?.content || apiData.error?.message || "Sorry, I am having trouble connecting to my brain right now!";
-          
+          if (!response.ok) {
+            throw new Error(apiData.error?.message || `OpenRouter returned HTTP ${response.status}.`);
+          }
+
+          const aiReply = apiData.choices?.[0]?.message?.content?.trim();
+          if (!aiReply) {
+            throw new Error("OpenRouter returned no message content.");
+          }
+
+          await sendBotReply(aiReply);
+        } catch (aiError) {
+          console.error("TalkBot AI Error:", aiError);
+          const detail = aiError.name === "AbortError"
+            ? "The AI request timed out. Please try again."
+            : "TalkBot is temporarily unavailable. Please try again in a moment.";
+          await sendBotReply(detail);
+        } finally {
           if (senderSocketId) {
             io.to(senderSocketId).emit("stop-typing", { from: talkBotId });
           }
-
-          const botMessage = new Message({
-            senderId: talkBotId,
-            receiverId: senderId,
-            content: aiReply,
-            status: "delivered"
-          });
-          await botMessage.save();
-          
-          socket.emit("receive-message", {
-            _id: botMessage._id,
-            senderId: talkBotId,
-            receiverId: senderId,
-            content: aiReply,
-            status: "delivered",
-            createdAt: botMessage.createdAt,
-          });
-        } catch (aiError) {
-          console.error("Gemini AI Error:", aiError);
         }
       }
 

@@ -22,4 +22,7 @@ const groupSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Index to optimize user group lookup queries
+groupSchema.index({ members: 1 });
+
 module.exports = mongoose.model("Group", groupSchema);

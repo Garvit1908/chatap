@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import Aurora from "../components/Aurora";
+import Magnetic from "../components/Magnetic";
 
 export default function Landing() {
   return (
@@ -47,21 +48,25 @@ export default function Landing() {
           </span>
         </h1>
         <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl leading-relaxed">
-          Experience premium real-time messaging and HD video calls. Built with modern glassmorphism and powered by advanced AI assistants.
+          Experience premium real-time messaging and HD video calls.
         </p>
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto px-6 sm:px-0">
-          <Link
-            to="/signup"
-            className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-bold rounded-full hover:from-violet-500 hover:to-fuchsia-500 transition-all duration-300 shadow-[0_8px_25px_rgba(124,58,237,0.4)] hover:shadow-[0_12px_35px_rgba(124,58,237,0.6)] hover:-translate-y-1"
-          >
-            Get Started — It's Free
-          </Link>
-          <Link
-            to="/login"
-            className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/10 text-white font-semibold rounded-full hover:bg-white/10 backdrop-blur-sm transition-all duration-300 shadow-[0_8px_25px_rgba(0,0,0,0.2)] hover:-translate-y-1"
-          >
-            Login to your account
-          </Link>
+          <Magnetic>
+            <Link
+              to="/signup"
+              className="w-full sm:w-auto block text-center px-8 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-bold rounded-full hover:from-violet-500 hover:to-fuchsia-500 transition-all duration-300 shadow-[0_8px_25px_rgba(124,58,237,0.4)] hover:shadow-[0_12px_35px_rgba(124,58,237,0.6)]"
+            >
+              Get Started — It's Free
+            </Link>
+          </Magnetic>
+          <Magnetic>
+            <Link
+              to="/login"
+              className="w-full sm:w-auto block text-center px-8 py-4 bg-white/5 border border-white/10 text-white font-semibold rounded-full hover:bg-white/10 backdrop-blur-sm transition-all duration-300 shadow-[0_8px_25px_rgba(0,0,0,0.2)]"
+            >
+              Login to your account
+            </Link>
+          </Magnetic>
         </div>
       </main>
 
