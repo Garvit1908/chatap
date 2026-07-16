@@ -34,8 +34,12 @@ app.set("trust proxy", 1);
 const server = http.createServer(app);
 
 const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(",")
-  : ["http://localhost:5173", "https://talkflow-frontend-s10c.onrender.com"];
+  ? process.env.CORS_ORIGINS.split(",").map(o => o.trim().replace(/\/$/, ""))
+  : [
+      "http://localhost:5173",
+      "https://talkflow-frontend-s10c.onrender.com",
+      "https://chatap-six.vercel.app"
+    ];
 
 const io = new Server(server, {
   cors: {
