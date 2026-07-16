@@ -1,37 +1,34 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../hooks/useAuth";
+import { API_BASE } from "../config/api";
+import { SocketContext } from "./SocketContextObj";
 
-const SocketContext = createContext();
-
-export function useSocket() {
-  return useContext(SocketContext);
-}
 
 export function SocketProvider({ children }) {
-  const { user } = useAuth();
+
+  const { user, token } = useAuth();
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !token) return;
 
-    const newSocket = io("https://talkflow-backend-k286.onrender.com");
-
-    newSocket.on("connect", () => {
-      newSocket.emit("user-online", user.id);
+    const newSocket = io(API_BASE, {
+      auth: { token }
     });
 
     newSocket.on("online-users", (users) => {
       setOnlineUsers(users);
     });
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSocket(newSocket);
 
     return () => {
       newSocket.disconnect();
     };
-  }, [user]);
+  }, [user, token]);
 
   return (
     <SocketContext.Provider value={{ socket, onlineUsers }}>
@@ -39,3 +36,4 @@ export function SocketProvider({ children }) {
     </SocketContext.Provider>
   );
 }
+

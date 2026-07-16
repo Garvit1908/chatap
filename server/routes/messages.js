@@ -1,27 +1,10 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const Message = require("../models/Message");
+const Group = require("../models/Group");
+const authMiddleware = require("../middleware/auth");
 
 const router = express.Router();
 
-// Middleware: verify JWT token
-const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "No token, authorization denied" });
-  }
-
-  const token = authHeader.split(" ")[1];
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decoded.id;
-    next();
-  } catch (error) {
-    res.status(401).json({ message: "Invalid token" });
-  }
-};
 
 // GET /api/messages/:userId — get chat history between two users
 router.get("/:userId", authMiddleware, async (req, res) => {
@@ -43,6 +26,14 @@ router.get("/:userId", authMiddleware, async (req, res) => {
 // GET /api/messages/group/:groupId — get group chat history
 router.get("/group/:groupId", authMiddleware, async (req, res) => {
   try {
+    const group = await Group.findById(req.params.groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    if (!group.members.some(id => id.toString() === req.userId)) {
+      return res.status(403).json({ message: "Access denied: Not a member of this group" });
+    }
+
     const messages = await Message.find({
       groupId: req.params.groupId,
     })

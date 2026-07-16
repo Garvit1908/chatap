@@ -112,9 +112,12 @@ void main() {
 export default function Aurora(props) {
   const { colorStops = ['#5227FF', '#7cff67', '#5227FF'], amplitude = 1.0, blend = 0.5 } = props;
   const propsRef = useRef(props);
-  propsRef.current = props;
+  useEffect(() => {
+    propsRef.current = props;
+  });
 
   const ctnDom = useRef(null);
+
 
   useEffect(() => {
     const ctn = ctnDom.current;

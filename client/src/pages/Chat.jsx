@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from "react";
-import { useAuth } from "../context/AuthContext";
-import { useSocket } from "../context/SocketContext";
-import axios from "axios";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useAuth } from "../hooks/useAuth";
+import { useSocket } from "../hooks/useSocket";
+import { apiClient } from "../config/api";
+
 import Sidebar from "../components/Sidebar";
 import ChatWindow from "../components/ChatWindow";
 import VideoCall from "../components/VideoCall";
@@ -19,33 +20,35 @@ export default function Chat() {
   const [callData, setCallData] = useState(null);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
 
+  const selectedChatRef = useRef(selectedChat);
+  const chatTypeRef = useRef(chatType);
+
+  useEffect(() => {
+    selectedChatRef.current = selectedChat;
+    chatTypeRef.current = chatType;
+  }, [selectedChat, chatType]);
+
   const usersRef = useRef(users);
   useEffect(() => {
     usersRef.current = users;
   }, [users]);
 
-  const fetchActiveUsers = async () => {
+  const fetchActiveUsers = useCallback(async () => {
     try {
-      const res = await axios.get("https://talkflow-backend-k286.onrender.com/api/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.get("/api/users");
       setUsers(res.data);
     } catch (err) {
       console.error("Error fetching active users:", err);
     }
-  };
+  }, []);
 
   // Fetch users and groups initially
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [usersRes, groupsRes] = await Promise.all([
-          axios.get("https://talkflow-backend-k286.onrender.com/api/users", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get("https://talkflow-backend-k286.onrender.com/api/groups", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          apiClient.get("/api/users"),
+          apiClient.get("/api/groups"),
         ]);
         setUsers(usersRes.data);
         setGroups(groupsRes.data);
@@ -64,15 +67,17 @@ export default function Chat() {
       try {
         let url = "";
         if (chatType === "user") {
-          url = `https://talkflow-backend-k286.onrender.com/api/messages/${selectedChat._id}`;
+          url = `/api/messages/${selectedChat._id}`;
         } else {
-          url = `https://talkflow-backend-k286.onrender.com/api/messages/group/${selectedChat._id}`;
+          url = `/api/messages/group/${selectedChat._id}`;
         }
-        const res = await axios.get(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setMessages(res.data);
-      } catch (err) {
+        const res = await apiClient.get(url);
+        let data = res.data;
+        if (chatType === "user") {
+          data = data.map(m => m.senderId === selectedChat._id ? { ...m, status: "read" } : m);
+        }
+        setMessages(data);
+      } catch {
         // No message history endpoint yet — start fresh
         setMessages([]);
       }
@@ -84,7 +89,6 @@ export default function Chat() {
   useEffect(() => {
     if (socket && selectedChat && chatType === "user") {
       socket.emit("mark-messages-read", { senderId: selectedChat._id, receiverId: user.id });
-      setMessages((prev) => prev.map(m => m.senderId === selectedChat._id ? { ...m, status: "read" } : m));
     }
   }, [selectedChat, socket, chatType, user.id]);
 
@@ -98,10 +102,13 @@ export default function Chat() {
         fetchActiveUsers();
       }
 
+      const activeChat = selectedChatRef.current;
+      const activeType = chatTypeRef.current;
+
       if (
-        selectedChat &&
-        chatType === "user" &&
-        msg.senderId === selectedChat._id
+        activeChat &&
+        activeType === "user" &&
+        msg.senderId === activeChat._id
       ) {
         setMessages((prev) => [...prev, { ...msg, status: "read" }]);
         socket.emit("mark-messages-read", { senderId: msg.senderId, receiverId: user.id });
@@ -121,10 +128,13 @@ export default function Chat() {
     });
 
     socket.on("receive-group-message", (msg) => {
+      const activeChat = selectedChatRef.current;
+      const activeType = chatTypeRef.current;
+
       if (
-        selectedChat &&
-        chatType === "group" &&
-        msg.groupId === selectedChat._id &&
+        activeChat &&
+        activeType === "group" &&
+        msg.groupId === activeChat._id &&
         msg.senderId !== user.id
       ) {
         setMessages((prev) => [...prev, msg]);
@@ -148,7 +158,8 @@ export default function Chat() {
       socket.off("incoming-call");
       socket.off("call-accepted");
     };
-  }, [socket, selectedChat, chatType, user]);
+  }, [socket, user, fetchActiveUsers]);
+
 
   // Join group rooms when groups are loaded
   useEffect(() => {
@@ -244,7 +255,6 @@ export default function Chat() {
           onSelectGroup={handleSelectGroup}
           onGroupCreated={handleGroupCreated}
           currentUser={user}
-          token={token}
           onLogout={logout}
         />
       </div>

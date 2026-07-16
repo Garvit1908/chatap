@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import { apiClient } from "../config/api";
 
 export default function Sidebar({
   users,
@@ -11,7 +11,6 @@ export default function Sidebar({
   onSelectGroup,
   onGroupCreated,
   currentUser,
-  token,
   onLogout,
 }) {
   const [tab, setTab] = useState("users");
@@ -45,9 +44,8 @@ export default function Sidebar({
 
     setDbSearchLoading(true);
     try {
-      const res = await axios.get(
-        `https://talkflow-backend-k286.onrender.com/api/users/search?q=${encodeURIComponent(val)}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await apiClient.get(
+        `/api/users/search?q=${encodeURIComponent(val)}`
       );
       setDbSearchResults(res.data);
     } catch (err) {
@@ -85,10 +83,9 @@ export default function Sidebar({
     }
     setGroupError("");
     try {
-      const res = await axios.post(
-        "https://talkflow-backend-k286.onrender.com/api/groups",
-        { name: groupName, members: selectedMembers },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await apiClient.post(
+        "/api/groups",
+        { name: groupName, members: selectedMembers }
       );
       onGroupCreated(res.data);
       setShowCreateGroup(false);
@@ -98,6 +95,7 @@ export default function Sidebar({
       console.error("Error creating group:", err);
     }
   };
+
 
   const getInitial = (name) => name?.charAt(0)?.toUpperCase() || "?";
 

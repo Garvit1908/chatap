@@ -28,7 +28,7 @@ export default function Magnetic({ children }) {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
-        transform: `translate3d(${x}px, ${y}px, 0)`,
+        transform: `translate3d(${x}px, ${y}px, 0)`, 
         transition: x === 0 && y === 0 ? "transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)" : "none",
         willChange: "transform"
       }}

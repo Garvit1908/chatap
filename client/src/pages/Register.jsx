@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import axios from "axios";
+import { useAuth } from "../hooks/useAuth";
+
+import { apiClient } from "../config/api";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -15,9 +16,6 @@ export default function Register() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const API_BASE = "https://talkflow-backend-k286.onrender.com";
-  const REQUEST_TIMEOUT = 30000; // 30 seconds
-
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setError("");
@@ -25,9 +23,9 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await axios.post(`${API_BASE}/api/auth/send-otp`, {
+      await apiClient.post("/api/auth/send-otp", {
         email,
-      }, { timeout: REQUEST_TIMEOUT });
+      });
       setOtpSent(true);
       setSuccess("OTP has been sent to your email.");
     } catch (err) {
@@ -49,12 +47,12 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/register`, {
+      const res = await apiClient.post("/api/auth/register", {
         name,
         email,
         password,
         otp,
-      }, { timeout: REQUEST_TIMEOUT });
+      });
       login(res.data.user, res.data.token);
       navigate("/");
     } catch (err) {
@@ -69,6 +67,7 @@ export default function Register() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0e1a] to-[#12172b] flex items-center justify-center p-4 relative overflow-hidden">

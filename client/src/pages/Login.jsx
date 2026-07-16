@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
+
 import { GoogleLogin } from "@react-oauth/google";
-import axios from "axios";
+import { apiClient } from "../config/api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,18 +13,16 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const API_BASE = "https://talkflow-backend-k286.onrender.com";
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/login`, {
+      const res = await apiClient.post("/api/auth/login", {
         email,
         password,
-      }, { timeout: 30000 });
+      });
       login(res.data.user, res.data.token);
       navigate("/");
     } catch (err) {
@@ -43,9 +42,9 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/google`, {
+      const res = await apiClient.post("/api/auth/google", {
         credential: credentialResponse.credential,
-      }, { timeout: 30000 });
+      });
       login(res.data.user, res.data.token);
       navigate("/chat");
     } catch (err) {
@@ -60,6 +59,7 @@ export default function Login() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0e1a] to-[#12172b] flex items-center justify-center p-4 relative overflow-hidden">

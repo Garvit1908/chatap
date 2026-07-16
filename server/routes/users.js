@@ -1,28 +1,10 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Message = require("../models/Message");
+const authMiddleware = require("../middleware/auth");
 
 const router = express.Router();
 
-// Middleware: verify JWT token
-const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "No token, authorization denied" });
-  }
-
-  const token = authHeader.split(" ")[1];
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decoded.id;
-    next();
-  } catch (error) {
-    res.status(401).json({ message: "Invalid token" });
-  }
-};
 
 // GET /api/users/search — search users by name or email (excluding current user)
 router.get("/search", authMiddleware, async (req, res) => {

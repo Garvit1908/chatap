@@ -77,9 +77,6 @@ export default function ChatWindow({
     }
   };
 
-  const isOnline =
-    chatType === "user" && onlineUsers.includes(selectedChat._id);
-
   const getInitial = (name) => name?.charAt(0)?.toUpperCase() || "?";
 
   const avatarColors = [
@@ -97,12 +94,6 @@ export default function ChatWindow({
     return avatarColors[index || 0];
   };
 
-  const formatTime = (date) => {
-    return new Date(date).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-[#0a0e1a]/95 to-[#12172b]/95 relative overflow-hidden">

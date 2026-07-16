@@ -1,131 +1,138 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import SimplePeer from "simple-peer";
 
 export default function VideoCall({ socket, callData, currentUser, onEndCall }) {
-  const [stream, setStream] = useState(null);
-  const [callStatus, setCallStatus] = useState("connecting");
-  const [isMuted, setIsMuted] = useState(false);
-  const localVideoRef = useRef(null);
-  const remoteVideoRef = useRef(null);
-  const peerRef = useRef(null);
+   const [stream, setStream] = useState(null);
+   const [callStatus, setCallStatus] = useState("connecting");
+   const [isMuted, setIsMuted] = useState(false);
+   const localVideoRef = useRef(null);
+   const remoteVideoRef = useRef(null);
+   const peerRef = useRef(null);
+   const streamRef = useRef(null);
+ 
+   const cleanup = useCallback(() => {
+     const activeStream = streamRef.current;
+     if (activeStream) {
+       activeStream.getTracks().forEach((track) => track.stop());
+     }
+     if (peerRef.current) {
+       peerRef.current.destroy();
+       peerRef.current = null;
+     }
+     socket.off("call-accepted");
+   }, [socket]);
+ 
+   const startMedia = useCallback(async () => {
+     try {
+       const mediaStream = await navigator.mediaDevices.getUserMedia({
+         video: true,
+         audio: true,
+       });
+       setStream(mediaStream);
+       streamRef.current = mediaStream;
+ 
+       if (localVideoRef.current) {
+         localVideoRef.current.srcObject = mediaStream;
+       }
+ 
+       if (callData.initiator) {
+         // Caller: create peer as initiator
+         const peer = new SimplePeer({
+           initiator: true,
+           trickle: false,
+           stream: mediaStream,
+           config: {
+             iceServers: [
+               { urls: "stun:stun.l.google.com:19302" },
+               { urls: "stun:stun1.l.google.com:19302" },
+               { urls: "stun:stun2.l.google.com:19302" },
+             ],
+           },
+         });
+ 
+         peer.on("signal", (signal) => {
+           socket.emit("call-user", {
+             to: callData.to._id,
+             signal,
+             from: currentUser.id,
+             name: currentUser.name,
+           });
+         });
+ 
+         peer.on("stream", (remoteStream) => {
+           if (remoteVideoRef.current) {
+             remoteVideoRef.current.srcObject = remoteStream;
+           }
+           setCallStatus("connected");
+         });
+ 
+         peer.on("error", (err) => {
+           console.error("Peer error:", err);
+           setCallStatus("error");
+         });
+ 
+         // Listen for call acceptance
+         socket.on("call-accepted", (data) => {
+           peer.signal(data.signal);
+           setCallStatus("connected");
+         });
+ 
+         peerRef.current = peer;
+         setCallStatus("ringing");
+       } else {
+         // Callee: create peer and signal back
+         const peer = new SimplePeer({
+           initiator: false,
+           trickle: false,
+           stream: mediaStream,
+           config: {
+             iceServers: [
+               { urls: "stun:stun.l.google.com:19302" },
+               { urls: "stun:stun1.l.google.com:19302" },
+               { urls: "stun:stun2.l.google.com:19302" },
+             ],
+           },
+         });
+ 
+         peer.on("signal", (signal) => {
+           socket.emit("accept-call", {
+             to: callData.to,
+             signal,
+           });
+         });
+ 
+         peer.on("stream", (remoteStream) => {
+           if (remoteVideoRef.current) {
+             remoteVideoRef.current.srcObject = remoteStream;
+           }
+           setCallStatus("connected");
+         });
+ 
+         peer.on("error", (err) => {
+           console.error("Peer error:", err);
+           setCallStatus("error");
+         });
+ 
+         // Signal with the incoming call data
+         peer.signal(callData.incomingSignal);
+         peerRef.current = peer;
+       }
+     } catch (err) {
+       console.error("Media error:", err);
+       setCallStatus("error");
+     }
+   }, [callData, currentUser, socket]);
+ 
+   useEffect(() => {
+     // eslint-disable-next-line react-hooks/set-state-in-effect
+     startMedia();
+ 
+     return () => {
+       cleanup();
+     };
+   }, [startMedia, cleanup]);
 
-  useEffect(() => {
-    startMedia();
 
-    return () => {
-      cleanup();
-    };
-  }, []);
-
-  const startMedia = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      setStream(mediaStream);
-
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = mediaStream;
-      }
-
-      if (callData.initiator) {
-        // Caller: create peer as initiator
-        const peer = new SimplePeer({
-          initiator: true,
-          trickle: false,
-          stream: mediaStream,
-          config: {
-            iceServers: [
-              { urls: "stun:stun.l.google.com:19302" },
-              { urls: "stun:stun1.l.google.com:19302" },
-              { urls: "stun:stun2.l.google.com:19302" },
-            ],
-          },
-        });
-
-        peer.on("signal", (signal) => {
-          socket.emit("call-user", {
-            to: callData.to._id,
-            signal,
-            from: currentUser.id,
-            name: currentUser.name,
-          });
-        });
-
-        peer.on("stream", (remoteStream) => {
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = remoteStream;
-          }
-          setCallStatus("connected");
-        });
-
-        peer.on("error", (err) => {
-          console.error("Peer error:", err);
-          setCallStatus("error");
-        });
-
-        // Listen for call acceptance
-        socket.on("call-accepted", (data) => {
-          peer.signal(data.signal);
-          setCallStatus("connected");
-        });
-
-        peerRef.current = peer;
-        setCallStatus("ringing");
-      } else {
-        // Callee: create peer and signal back
-        const peer = new SimplePeer({
-          initiator: false,
-          trickle: false,
-          stream: mediaStream,
-          config: {
-            iceServers: [
-              { urls: "stun:stun.l.google.com:19302" },
-              { urls: "stun:stun1.l.google.com:19302" },
-              { urls: "stun:stun2.l.google.com:19302" },
-            ],
-          },
-        });
-
-        peer.on("signal", (signal) => {
-          socket.emit("accept-call", {
-            to: callData.to,
-            signal,
-          });
-        });
-
-        peer.on("stream", (remoteStream) => {
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = remoteStream;
-          }
-          setCallStatus("connected");
-        });
-
-        peer.on("error", (err) => {
-          console.error("Peer error:", err);
-          setCallStatus("error");
-        });
-
-        // Signal with the incoming call data
-        peer.signal(callData.incomingSignal);
-        peerRef.current = peer;
-      }
-    } catch (err) {
-      console.error("Media error:", err);
-      setCallStatus("error");
-    }
-  };
-
-  const cleanup = () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-    }
-    if (peerRef.current) {
-      peerRef.current.destroy();
-    }
-    socket.off("call-accepted");
-  };
 
   const handleEndCall = () => {
     cleanup();
