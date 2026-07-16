@@ -37,7 +37,6 @@ const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",").map(o => o.trim().replace(/\/$/, ""))
   : [
       "http://localhost:5173",
-      "https://talkflow-frontend-s10c.onrender.com",
       "https://chatap-six.vercel.app"
     ];
 
