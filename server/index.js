@@ -306,8 +306,6 @@ io.on("connection", (socket) => {
   });
 });
 
-const { MongoMemoryServer } = require("mongodb-memory-server");
-
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
@@ -331,6 +329,7 @@ const startServer = async () => {
     // Fallback to in-memory server ONLY in development/local env
     if (!isProduction && (!mongoUri || mongoUri.includes("127.0.0.1") || mongoUri.includes("localhost"))) {
       console.log("Starting in-memory MongoDB database...");
+      const { MongoMemoryServer } = require("mongodb-memory-server");
       const mongoServer = await MongoMemoryServer.create();
       mongoUri = mongoServer.getUri();
     } else if (!mongoUri) {
